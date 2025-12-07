@@ -169,7 +169,8 @@
             init() {
                 // Check if speech synthesis is supported
                 if (!window.speechSynthesis) {
-                    alert("Your browser does not support Text-to-Speech. Please use Chrome, Safari, or Edge.");
+                    // Using console.error instead of alert due to development environment constraints
+                    console.error("Browser does not support Text-to-Speech.");
                 }
             },
 
@@ -197,10 +198,16 @@
                 
                 if (this.sourceWords.length === 0) return;
 
+                // Clear the input text box after the words have been successfully captured
+                this.input.value = '';
+
                 this.runGame(this.sourceWords);
             },
 
             runGame(wordList) {
+                // BUG FIX: Clear the spelling input field at the start of any new round (restart, retry, or initial start)
+                this.userSpelling.value = '';
+
                 // Create a copy to avoid modifying source
                 this.words = [...wordList];
 
@@ -260,7 +267,10 @@
                 if (isCorrect) {
                     this.score++;
                 } else {
-                    this.missedWords.push(targetWord);
+                    // Check if the word is already in the missed list (in case of retryMissed loop)
+                    if (!this.missedWords.includes(targetWord)) {
+                        this.missedWords.push(targetWord);
+                    }
                 }
 
                 this.showFeedback(isCorrect, targetWord);
@@ -332,7 +342,8 @@
                     perfectMsg.classList.add('hidden');
                     retryBtn.classList.remove('hidden');
                     
-                    this.missedWords.forEach(word => {
+                    // Show only unique missed words
+                    [...new Set(this.missedWords)].forEach(word => {
                         const li = document.createElement('li');
                         li.textContent = word;
                         list.appendChild(li);
@@ -342,8 +353,11 @@
                 this.showView('results');
             },
 
+            // This function handles the "Start New List" button
             reset() {
-                this.input.value = '';
+                // Ensure the list input box is cleared
+                this.input.value = ''; 
+                // Ensure the spelling input box is cleared (belt-and-suspenders approach)
                 this.userSpelling.value = '';
                 this.showView('setup');
             }
